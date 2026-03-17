@@ -1,0 +1,1547 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Prediction Engine — Visual Documentation</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-sql.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-json.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-python.min.js"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css">
+<script>
+tailwind.config = {
+  theme: {
+    extend: {
+      colors: {
+        brand: { 50:'#eef7ff', 100:'#d9edff', 200:'#bce0ff', 300:'#8ecdff', 400:'#53b1ff', 500:'#2b8fff', 600:'#1470f5', 700:'#0d59e1', 800:'#1148b6', 900:'#143f8f', 950:'#112857' },
+        surface: { 50:'#f8fafc', 100:'#f1f5f9', 200:'#e2e8f0', 300:'#cbd5e1', 400:'#94a3b8', 500:'#64748b', 600:'#475569', 700:'#334155', 800:'#1e293b', 900:'#0f172a', 950:'#020617' }
+      }
+    }
+  }
+}
+</script>
+<style>
+html { scroll-behavior: smooth; }
+body { font-family: 'Inter', system-ui, -apple-system, sans-serif; background: #0f172a; color: #e2e8f0; }
+.glass { background: rgba(30, 41, 59, 0.6); backdrop-filter: blur(12px); border: 1px solid rgba(148, 163, 184, 0.1); }
+.glow { box-shadow: 0 0 30px rgba(43, 143, 255, 0.1); }
+.flow-line { stroke-dasharray: 8 4; animation: dash 1.5s linear infinite; }
+@keyframes dash { to { stroke-dashoffset: -24; } }
+@keyframes fadeUp { from { opacity:0; transform:translateY(20px); } to { opacity:1; transform:translateY(0); } }
+.animate-in { animation: fadeUp 0.5s ease-out forwards; }
+.code-block { position: relative; }
+.copy-btn { position:absolute; top:8px; right:8px; z-index:10; }
+.copy-btn:active { transform: scale(0.95); }
+pre[class*="language-"] { margin:0; border-radius: 0.5rem; font-size: 0.8rem; max-height: 400px; }
+code[class*="language-"] { font-size: 0.8rem; }
+.nav-link { transition: all 0.2s; }
+.nav-link:hover, .nav-link.active { color: #2b8fff; border-bottom-color: #2b8fff; }
+.endpoint-card:hover { border-color: rgba(43,143,255,0.4); transform: translateY(-2px); }
+.endpoint-card { transition: all 0.2s; overflow: hidden; }
+.endpoint-card code { word-break: break-all; }
+.step-node { transition: all 0.3s; cursor: pointer; }
+.step-node:hover { transform: scale(1.05); box-shadow: 0 0 20px rgba(43,143,255,0.3); }
+.tab-btn.active { background: #1470f5; color: white; }
+.tab-btn { transition: all 0.2s; }
+.metric-card { transition: all 0.3s; }
+.metric-card:hover { transform: translateY(-4px); box-shadow: 0 8px 30px rgba(0,0,0,0.3); }
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: #1e293b; }
+::-webkit-scrollbar-thumb { background: #475569; border-radius: 3px; }
+</style>
+</head>
+<body>
+
+<!-- Navigation -->
+<nav class="fixed top-0 left-0 right-0 z-50 glass border-b border-surface-700/50">
+  <div class="max-w-7xl mx-auto px-6 flex items-center justify-between h-14">
+    <div class="flex items-center gap-3">
+      <div class="w-8 h-8 rounded-lg bg-brand-600 flex items-center justify-center">
+        <svg class="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/></svg>
+      </div>
+      <span class="font-semibold text-white text-sm">Prediction Engine</span>
+      <span class="text-xs text-surface-400 ml-1">v3 — March 2026</span>
+    </div>
+    <div class="hidden md:flex items-center gap-6 text-sm">
+      <a href="#pipeline" class="nav-link text-surface-400 border-b-2 border-transparent pb-1">Pipeline</a>
+      <a href="#formula-animation" class="nav-link text-surface-400 border-b-2 border-transparent pb-1">Live Demo</a>
+      <a href="#formula" class="nav-link text-surface-400 border-b-2 border-transparent pb-1">Formula</a>
+      <a href="#api" class="nav-link text-surface-400 border-b-2 border-transparent pb-1">API</a>
+      <a href="#queries" class="nav-link text-surface-400 border-b-2 border-transparent pb-1">Queries</a>
+      <a href="#prompt" class="nav-link text-surface-400 border-b-2 border-transparent pb-1">GPT Prompt</a>
+      <a href="#accuracy" class="nav-link text-surface-400 border-b-2 border-transparent pb-1">Accuracy</a>
+    </div>
+  </div>
+</nav>
+
+<!-- Hero -->
+<section class="pt-24 pb-16 px-6">
+  <div class="max-w-7xl mx-auto text-center">
+    <h1 class="text-4xl md:text-5xl font-bold text-white mb-4">Prediction & Forecast Engine</h1>
+    <p class="text-surface-400 text-lg max-w-2xl mx-auto mb-8">AI-powered freight price predictions across Ocean and Air modes. Monthly GPT-4 formula synthesis, real-time application, ~76% accuracy.</p>
+    <div class="flex flex-wrap justify-center gap-4 mb-12">
+      <div class="glass rounded-xl px-5 py-3 glow metric-card relative group cursor-default">
+        <div class="text-2xl font-bold text-brand-400">76%</div>
+        <div class="text-xs text-surface-400">Overall Accuracy</div>
+        <div class="tooltip hidden group-hover:block absolute bottom-full left-1/2 -translate-x-1/2 mb-3 w-64 p-3 rounded-lg bg-surface-800 border border-surface-600 shadow-xl text-xs text-surface-300 z-50">
+          <div class="font-medium text-white mb-1">Overall Accuracy (100% - MAPE)</div>
+          On average, predictions land within 24% of the actual market price — meaning ~76% accuracy. Higher is better. Think of it as a school grade for the model.
+          <div class="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-surface-800"></div>
+        </div>
+      </div>
+      <div class="glass rounded-xl px-5 py-3 glow metric-card relative group cursor-default">
+        <div class="text-2xl font-bold text-emerald-400">24.2%</div>
+        <div class="text-xs text-surface-400">MAPE</div>
+        <div class="tooltip hidden group-hover:block absolute bottom-full left-1/2 -translate-x-1/2 mb-3 w-72 p-3 rounded-lg bg-surface-800 border border-surface-600 shadow-xl text-xs text-surface-300 z-50">
+          <div class="font-medium text-white mb-1">Mean Absolute Percentage Error</div>
+          The average % difference between what we predicted and what actually happened. If we predicted $2,000 and actual was $2,500, that's a 20% error. Our average across all predictions is 24.2%. <span class="text-emerald-400">Lower is better.</span>
+          <div class="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-surface-800"></div>
+        </div>
+      </div>
+      <div class="glass rounded-xl px-5 py-3 glow metric-card relative group cursor-default">
+        <div class="text-2xl font-bold text-amber-400">75.5%</div>
+        <div class="text-xs text-surface-400">Direction Accuracy</div>
+        <div class="tooltip hidden group-hover:block absolute bottom-full left-1/2 -translate-x-1/2 mb-3 w-72 p-3 rounded-lg bg-surface-800 border border-surface-600 shadow-xl text-xs text-surface-300 z-50">
+          <div class="font-medium text-white mb-1">Direction Accuracy</div>
+          Did we correctly predict whether the price would go up or down? Out of all predictions, 75.5% got the direction right. Even if the exact number is off, knowing the trend direction is valuable for planning. <span class="text-amber-400">Higher is better.</span>
+          <div class="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-surface-800"></div>
+        </div>
+      </div>
+      <div class="glass rounded-xl px-5 py-3 glow metric-card relative group cursor-default">
+        <div class="text-2xl font-bold text-purple-400">57.4%</div>
+        <div class="text-xs text-surface-400">Range Coverage</div>
+        <div class="tooltip hidden group-hover:block absolute bottom-full left-1/2 -translate-x-1/2 mb-3 w-72 p-3 rounded-lg bg-surface-800 border border-surface-600 shadow-xl text-xs text-surface-300 z-50">
+          <div class="font-medium text-white mb-1">Range Coverage</div>
+          Each prediction comes with a confidence range (e.g. $1,850–$2,050). This measures how often the actual price fell inside that range. 57.4% of the time our range captured the real price. <span class="text-purple-400">Higher is better</span> — ideally 80%+.
+          <div class="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-surface-800"></div>
+        </div>
+      </div>
+      <div class="glass rounded-xl px-5 py-3 glow metric-card relative group cursor-default">
+        <div class="text-2xl font-bold text-rose-400">216</div>
+        <div class="text-xs text-surface-400">Matched Data Points</div>
+        <div class="tooltip hidden group-hover:block absolute bottom-full left-1/2 -translate-x-1/2 mb-3 w-64 p-3 rounded-lg bg-surface-800 border border-surface-600 shadow-xl text-xs text-surface-300 z-50">
+          <div class="font-medium text-white mb-1">Matched Data Points</div>
+          The number of prediction-vs-actual pairs we tested. Each pair is one predicted price matched to a real market price for the same route, rate type, and date. More points = more reliable metrics.
+          <div class="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-surface-800"></div>
+        </div>
+      </div>
+    </div>
+    <!-- 3 Repos -->
+    <div class="grid md:grid-cols-3 gap-4 max-w-4xl mx-auto">
+      <div class="glass rounded-xl p-4 text-left overflow-hidden">
+        <div class="flex items-center gap-2 mb-2">
+          <div class="w-2 h-2 rounded-full bg-emerald-400 flex-shrink-0"></div>
+          <span class="text-sm font-medium text-white truncate">data-products</span>
+        </div>
+        <p class="text-xs text-surface-400">Airflow DAG, GPT-4 formula synthesis, ClickHouse writes</p>
+        <code class="text-xs text-surface-500 mt-1 block truncate">airflow_dags/prediction_engine/</code>
+      </div>
+      <div class="glass rounded-xl p-4 text-left overflow-hidden">
+        <div class="flex items-center gap-2 mb-2">
+          <div class="w-2 h-2 rounded-full bg-brand-400 flex-shrink-0"></div>
+          <span class="text-sm font-medium text-white truncate">fd-backend</span>
+        </div>
+        <p class="text-xs text-surface-400">FastAPI endpoints, formula application, price predictions</p>
+        <code class="text-xs text-surface-500 mt-1 block truncate">app/controllers/forecasts_controller.py</code>
+      </div>
+      <div class="glass rounded-xl p-4 text-left overflow-hidden">
+        <div class="flex items-center gap-2 mb-2">
+          <div class="w-2 h-2 rounded-full bg-purple-400 flex-shrink-0"></div>
+          <span class="text-sm font-medium text-white truncate">fd-frontend</span>
+        </div>
+        <p class="text-xs text-surface-400">React page, Recharts visualization, Recoil state</p>
+        <code class="text-xs text-surface-500 mt-1 block truncate">src/pages/Forecast/</code>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Pipeline Section -->
+<section id="pipeline" class="py-16 px-6">
+  <div class="max-w-7xl mx-auto">
+    <h2 class="text-2xl font-bold text-white mb-2">Data Pipeline</h2>
+    <p class="text-surface-400 mb-10">How data flows from raw market prices to user-facing predictions</p>
+
+    <!-- Visual Pipeline -->
+    <div class="relative">
+      <!-- Step 1: DAG -->
+      <div class="grid md:grid-cols-5 gap-4 mb-6">
+        <div class="step-node glass rounded-xl p-4 text-center" onclick="showPipelineDetail('dag')">
+          <div class="w-10 h-10 rounded-full bg-emerald-500/20 flex items-center justify-center mx-auto mb-3">
+            <svg class="w-5 h-5 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+          </div>
+          <div class="text-sm font-medium text-white">1. Airflow DAG</div>
+          <div class="text-xs text-surface-400 mt-1">Monthly, 1st at 02:00 UTC</div>
+          <div class="text-xs text-emerald-400 mt-2">prediction_engine</div>
+        </div>
+        <div class="step-node glass rounded-xl p-4 text-center" onclick="showPipelineDetail('extract')">
+          <div class="w-10 h-10 rounded-full bg-blue-500/20 flex items-center justify-center mx-auto mb-3">
+            <svg class="w-5 h-5 text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4"/></svg>
+          </div>
+          <div class="text-sm font-medium text-white">2. Extract Prices</div>
+          <div class="text-xs text-surface-400 mt-1">10 months lookback</div>
+          <div class="text-xs text-blue-400 mt-2">/rate_stats/v3 API</div>
+        </div>
+        <div class="step-node glass rounded-xl p-4 text-center" onclick="showPipelineDetail('gpt')">
+          <div class="w-10 h-10 rounded-full bg-purple-500/20 flex items-center justify-center mx-auto mb-3">
+            <svg class="w-5 h-5 text-purple-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/></svg>
+          </div>
+          <div class="text-sm font-medium text-white">3. GPT-4 Synthesis</div>
+          <div class="text-xs text-surface-400 mt-1">25 concurrent workers</div>
+          <div class="text-xs text-purple-400 mt-2">gpt-4.1-mini</div>
+        </div>
+        <div class="step-node glass rounded-xl p-4 text-center" onclick="showPipelineDetail('store')">
+          <div class="w-10 h-10 rounded-full bg-amber-500/20 flex items-center justify-center mx-auto mb-3">
+            <svg class="w-5 h-5 text-amber-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8"/></svg>
+          </div>
+          <div class="text-sm font-medium text-white">4. Store Formulas</div>
+          <div class="text-xs text-surface-400 mt-1">ClickHouse batch insert</div>
+          <div class="text-xs text-amber-400 mt-2">prediction_formula</div>
+        </div>
+        <div class="step-node glass rounded-xl p-4 text-center" onclick="showPipelineDetail('serve')">
+          <div class="w-10 h-10 rounded-full bg-brand-500/20 flex items-center justify-center mx-auto mb-3">
+            <svg class="w-5 h-5 text-brand-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+          </div>
+          <div class="text-sm font-medium text-white">5. Serve Predictions</div>
+          <div class="text-xs text-surface-400 mt-1">FastAPI, per request</div>
+          <div class="text-xs text-brand-400 mt-2">/forecast/predict</div>
+        </div>
+      </div>
+
+      <!-- Animated connecting arrows -->
+      <svg class="absolute top-12 left-0 w-full h-4 -z-10 hidden md:block" style="top: 2.5rem;">
+        <line x1="12%" y1="8" x2="28%" y2="8" class="flow-line" stroke="#475569" stroke-width="2"/>
+        <line x1="32%" y1="8" x2="48%" y2="8" class="flow-line" stroke="#475569" stroke-width="2"/>
+        <line x1="52%" y1="8" x2="68%" y2="8" class="flow-line" stroke="#475569" stroke-width="2"/>
+        <line x1="72%" y1="8" x2="88%" y2="8" class="flow-line" stroke="#475569" stroke-width="2"/>
+      </svg>
+
+      <!-- Pipeline Detail Panel -->
+      <div id="pipeline-detail" class="glass rounded-xl p-6 mt-6 hidden">
+        <div id="pipeline-detail-content"></div>
+      </div>
+    </div>
+
+    <!-- Data Sources -->
+    <div class="mt-12 grid md:grid-cols-3 gap-4">
+      <div class="glass rounded-xl p-5">
+        <div class="text-xs font-medium text-emerald-400 uppercase tracking-wider mb-3">Data Sources for GPT</div>
+        <div class="space-y-2 text-sm">
+          <div class="flex items-center gap-2"><div class="w-1.5 h-1.5 rounded-full bg-blue-400"></div><span class="text-surface-300">Historical prices (10 mo)</span></div>
+          <div class="flex items-center gap-2"><div class="w-1.5 h-1.5 rounded-full bg-amber-400"></div><span class="text-surface-300">Market events (MySQL)</span></div>
+          <div class="flex items-center gap-2"><div class="w-1.5 h-1.5 rounded-full bg-purple-400"></div><span class="text-surface-300">Price direction probs (CH)</span></div>
+          <div class="flex items-center gap-2"><div class="w-1.5 h-1.5 rounded-full bg-emerald-400"></div><span class="text-surface-300">Weekly volatility series</span></div>
+          <div class="flex items-center gap-2"><div class="w-1.5 h-1.5 rounded-full bg-rose-400"></div><span class="text-surface-300">Price bounds (min/max)</span></div>
+        </div>
+      </div>
+      <div class="glass rounded-xl p-5">
+        <div class="text-xs font-medium text-brand-400 uppercase tracking-wider mb-3">Formula Output</div>
+        <div class="space-y-2 text-sm">
+          <div class="flex items-center gap-2"><div class="w-1.5 h-1.5 rounded-full bg-blue-400"></div><span class="text-surface-300">trend_weekly_pct</span></div>
+          <div class="flex items-center gap-2"><div class="w-1.5 h-1.5 rounded-full bg-amber-400"></div><span class="text-surface-300">seasonal_factors (W01–W52)</span></div>
+          <div class="flex items-center gap-2"><div class="w-1.5 h-1.5 rounded-full bg-purple-400"></div><span class="text-surface-300">active_events[]</span></div>
+          <div class="flex items-center gap-2"><div class="w-1.5 h-1.5 rounded-full bg-emerald-400"></div><span class="text-surface-300">forward_signals[]</span></div>
+          <div class="flex items-center gap-2"><div class="w-1.5 h-1.5 rounded-full bg-rose-400"></div><span class="text-surface-300">reasoning (text)</span></div>
+        </div>
+      </div>
+      <div class="glass rounded-xl p-5">
+        <div class="text-xs font-medium text-amber-400 uppercase tracking-wider mb-3">DAG Config</div>
+        <div class="space-y-2 text-sm text-surface-300">
+          <div class="flex justify-between"><span>Schedule</span><code class="text-xs text-amber-300">0 2 1 * *</code></div>
+          <div class="flex justify-between"><span>Lookback</span><span class="text-amber-300">10 months</span></div>
+          <div class="flex justify-between"><span>Horizon</span><span class="text-amber-300">26 weeks</span></div>
+          <div class="flex justify-between"><span>Workers</span><span class="text-amber-300">25 threads</span></div>
+          <div class="flex justify-between"><span>Model</span><span class="text-amber-300">gpt-4.1-mini</span></div>
+          <div class="flex justify-between"><span>Temp</span><span class="text-amber-300">0.3</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- GSAP Scroll-Animated: Formula in Action                      -->
+<!-- ============================================================ -->
+<section id="formula-animation" class="relative bg-surface-950">
+  <!-- This entire section gets pinned by GSAP while the timeline plays -->
+  <div class="gsap-pin-target h-screen flex items-center justify-center overflow-hidden px-6">
+    <div class="max-w-6xl w-full mx-auto">
+
+        <!-- Section heading -->
+        <div class="text-center mb-6 gsap-title" style="opacity:0; transform:translateY(30px);">
+          <h2 class="text-2xl md:text-3xl font-bold text-white mb-1">Formula in Action</h2>
+          <p class="text-surface-400 text-sm">Scroll to see how raw data + formula = prediction</p>
+        </div>
+
+        <!-- 3-column layout: Raw Data | Operator | Formula -->
+        <div class="grid md:grid-cols-[1fr_auto_1fr] gap-4 items-start">
+
+          <!-- LEFT: Raw market data -->
+          <div class="space-y-3">
+            <div class="text-xs font-medium text-emerald-400 uppercase tracking-wider mb-2 gsap-data-label" style="opacity:0;">Market Data (ClickHouse)</div>
+
+            <div class="gsap-data-card glass rounded-xl p-4 border border-emerald-500/20" style="opacity:0; transform:translateX(-60px);">
+              <div class="flex items-center gap-2 mb-2">
+                <div class="w-2 h-2 rounded-full bg-emerald-400"></div>
+                <span class="text-xs text-surface-400">Base Price</span>
+              </div>
+              <div class="text-2xl font-bold text-white font-mono">$1,800</div>
+              <div class="text-xs text-surface-500 mt-1">CN→GB SPOT · latest median</div>
+            </div>
+
+            <div class="gsap-data-card glass rounded-xl p-4 border border-blue-500/20" style="opacity:0; transform:translateX(-60px);">
+              <div class="flex items-center gap-2 mb-2">
+                <div class="w-2 h-2 rounded-full bg-blue-400"></div>
+                <span class="text-xs text-surface-400">Price History</span>
+              </div>
+              <div class="flex items-end gap-1 h-8">
+                <div class="w-2 rounded-t bg-blue-500/40" style="height:50%"></div>
+                <div class="w-2 rounded-t bg-blue-500/40" style="height:65%"></div>
+                <div class="w-2 rounded-t bg-blue-500/40" style="height:45%"></div>
+                <div class="w-2 rounded-t bg-blue-500/40" style="height:70%"></div>
+                <div class="w-2 rounded-t bg-blue-500/50" style="height:55%"></div>
+                <div class="w-2 rounded-t bg-blue-500/50" style="height:80%"></div>
+                <div class="w-2 rounded-t bg-blue-500/60" style="height:60%"></div>
+                <div class="w-2 rounded-t bg-blue-500/60" style="height:75%"></div>
+                <div class="w-2 rounded-t bg-blue-500/70" style="height:90%"></div>
+                <div class="w-2 rounded-t bg-blue-400" style="height:85%"></div>
+              </div>
+              <div class="text-xs text-surface-500 mt-2">10 months · $1,420 – $2,180 range</div>
+            </div>
+
+            <div class="gsap-data-card glass rounded-xl p-4 border border-amber-500/20" style="opacity:0; transform:translateX(-60px);">
+              <div class="flex items-center gap-2 mb-2">
+                <div class="w-2 h-2 rounded-full bg-amber-400"></div>
+                <span class="text-xs text-surface-400">Market Events</span>
+              </div>
+              <div class="space-y-1.5 text-xs">
+                <div class="flex items-center gap-2"><span class="text-red-400 font-bold">3</span><span class="text-surface-300">Strait of Hormuz tensions</span></div>
+                <div class="flex items-center gap-2"><span class="text-amber-400 font-bold">2</span><span class="text-surface-300">CMA CGM surcharge</span></div>
+                <div class="flex items-center gap-2"><span class="text-amber-400 font-bold">2</span><span class="text-surface-300">Winter storms N. Europe</span></div>
+              </div>
+            </div>
+
+            <div class="gsap-data-card glass rounded-xl p-4 border border-purple-500/20" style="opacity:0; transform:translateX(-60px);">
+              <div class="flex items-center gap-2 mb-2">
+                <div class="w-2 h-2 rounded-full bg-purple-400"></div>
+                <span class="text-xs text-surface-400">Momentum & Direction</span>
+              </div>
+              <div class="flex items-center gap-4">
+                <div><div class="text-lg font-bold text-emerald-400">+7.91%</div><div class="text-xs text-surface-500">4-week momentum</div></div>
+                <div class="w-px h-8 bg-surface-700"></div>
+                <div><div class="text-lg font-bold text-red-400">55%</div><div class="text-xs text-surface-500">down probability</div></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- CENTER: Operator / Animation zone -->
+          <div class="flex flex-col items-center justify-center gap-4 py-8 md:py-0">
+            <!-- Combine arrow -->
+            <div class="gsap-combine-arrow" style="opacity:0; transform:scale(0);">
+              <div class="w-16 h-16 rounded-full bg-brand-600/30 border border-brand-500/50 flex items-center justify-center">
+                <svg class="w-7 h-7 text-brand-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"/></svg>
+              </div>
+            </div>
+            <!-- Progress dots -->
+            <div class="flex flex-col gap-2 gsap-progress-dots" style="opacity:0;">
+              <div class="gsap-dot w-2.5 h-2.5 rounded-full bg-surface-700 transition-colors duration-300" data-step="0"></div>
+              <div class="gsap-dot w-2.5 h-2.5 rounded-full bg-surface-700 transition-colors duration-300" data-step="1"></div>
+              <div class="gsap-dot w-2.5 h-2.5 rounded-full bg-surface-700 transition-colors duration-300" data-step="2"></div>
+              <div class="gsap-dot w-2.5 h-2.5 rounded-full bg-surface-700 transition-colors duration-300" data-step="3"></div>
+              <div class="gsap-dot w-2.5 h-2.5 rounded-full bg-surface-700 transition-colors duration-300" data-step="4"></div>
+              <div class="gsap-dot w-2.5 h-2.5 rounded-full bg-surface-700 transition-colors duration-300" data-step="5"></div>
+            </div>
+          </div>
+
+          <!-- RIGHT: Formula components + running total -->
+          <div class="space-y-3">
+            <div class="text-xs font-medium text-brand-400 uppercase tracking-wider mb-2 gsap-formula-label" style="opacity:0;">GPT-4 Formula (Week 3)</div>
+
+            <div class="gsap-formula-card glass rounded-xl p-4 border border-red-500/20" style="opacity:0; transform:translateX(60px);" data-step="0">
+              <div class="flex items-center justify-between mb-1">
+                <div class="flex items-center gap-2"><div class="w-2 h-2 rounded-full bg-red-400"></div><span class="text-xs text-surface-400">Trend</span></div>
+                <span class="text-sm font-bold font-mono text-red-400">-1.05%</span>
+              </div>
+              <div class="text-xs text-surface-500"><code>-0.35% × 3 weeks</code> — gradual downward drift</div>
+              <div class="gsap-running-total hidden mt-2 pt-2 border-t border-surface-700">
+                <div class="flex justify-between text-xs"><span class="text-surface-400">Running total:</span><span class="font-mono font-bold text-white">-1.05%</span></div>
+                <div class="flex justify-between text-xs"><span class="text-surface-400">Price so far:</span><span class="font-mono text-surface-300">$1,781</span></div>
+              </div>
+            </div>
+
+            <div class="gsap-formula-card glass rounded-xl p-4 border border-blue-500/20" style="opacity:0; transform:translateX(60px);" data-step="1">
+              <div class="flex items-center justify-between mb-1">
+                <div class="flex items-center gap-2"><div class="w-2 h-2 rounded-full bg-blue-400"></div><span class="text-xs text-surface-400">Seasonal</span></div>
+                <span class="text-sm font-bold font-mono text-blue-400">+0.00%</span>
+              </div>
+              <div class="text-xs text-surface-500"><code>W12 factor = 1.0</code> — no seasonal effect this week</div>
+              <div class="gsap-running-total hidden mt-2 pt-2 border-t border-surface-700">
+                <div class="flex justify-between text-xs"><span class="text-surface-400">Running total:</span><span class="font-mono font-bold text-white">-1.05%</span></div>
+                <div class="flex justify-between text-xs"><span class="text-surface-400">Price so far:</span><span class="font-mono text-surface-300">$1,781</span></div>
+              </div>
+            </div>
+
+            <div class="gsap-formula-card glass rounded-xl p-4 border border-emerald-500/20" style="opacity:0; transform:translateX(60px);" data-step="2">
+              <div class="flex items-center justify-between mb-1">
+                <div class="flex items-center gap-2"><div class="w-2 h-2 rounded-full bg-emerald-400"></div><span class="text-xs text-surface-400">Momentum</span></div>
+                <span class="text-sm font-bold font-mono text-emerald-400">+4.94%</span>
+              </div>
+              <div class="text-xs text-surface-500"><code>7.91% × (1 - 3/8)</code> — fading upward push</div>
+              <div class="gsap-running-total hidden mt-2 pt-2 border-t border-surface-700">
+                <div class="flex justify-between text-xs"><span class="text-surface-400">Running total:</span><span class="font-mono font-bold text-white">+3.89%</span></div>
+                <div class="flex justify-between text-xs"><span class="text-surface-400">Price so far:</span><span class="font-mono text-surface-300">$1,870</span></div>
+              </div>
+            </div>
+
+            <div class="gsap-formula-card glass rounded-xl p-4 border border-amber-500/20" style="opacity:0; transform:translateX(60px);" data-step="3">
+              <div class="flex items-center justify-between mb-1">
+                <div class="flex items-center gap-2"><div class="w-2 h-2 rounded-full bg-amber-400"></div><span class="text-xs text-surface-400">Events</span></div>
+                <span class="text-sm font-bold font-mono text-amber-400">+3.96%</span>
+              </div>
+              <div class="text-xs text-surface-500"><code>Hormuz +2.31 · CMA +1.06 · Storms +0.59</code></div>
+              <div class="gsap-running-total hidden mt-2 pt-2 border-t border-surface-700">
+                <div class="flex justify-between text-xs"><span class="text-surface-400">Running total:</span><span class="font-mono font-bold text-white">+7.85%</span></div>
+                <div class="flex justify-between text-xs"><span class="text-surface-400">Price so far:</span><span class="font-mono text-surface-300">$1,941</span></div>
+              </div>
+            </div>
+
+            <div class="gsap-formula-card glass rounded-xl p-4 border border-purple-500/20" style="opacity:0; transform:translateX(60px);" data-step="4">
+              <div class="flex items-center justify-between mb-1">
+                <div class="flex items-center gap-2"><div class="w-2 h-2 rounded-full bg-purple-400"></div><span class="text-xs text-surface-400">Signals</span></div>
+                <span class="text-sm font-bold font-mono text-purple-400">+0.48%</span>
+              </div>
+              <div class="text-xs text-surface-500"><code>Capacity +0.58 · Regulation -0.52 · CNY +0.42</code></div>
+              <div class="gsap-running-total hidden mt-2 pt-2 border-t border-surface-700">
+                <div class="flex justify-between text-xs"><span class="text-surface-400">Running total:</span><span class="font-mono font-bold text-white">+8.33%</span></div>
+                <div class="flex justify-between text-xs"><span class="text-surface-400">Price so far:</span><span class="font-mono text-surface-300">$1,950</span></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- BOTTOM: Final result (appears at end) -->
+        <div class="gsap-result mt-6" style="opacity:0; transform:translateY(30px);">
+          <div class="glass rounded-xl p-5 border border-brand-500/30 glow">
+            <div class="flex flex-wrap items-center justify-center gap-6 text-center">
+              <div>
+                <div class="text-xs text-surface-400 mb-1">Base Price</div>
+                <div class="text-xl font-bold font-mono text-surface-300">$1,800</div>
+              </div>
+              <div class="text-2xl text-surface-500">×</div>
+              <div>
+                <div class="text-xs text-surface-400 mb-1">Total Change</div>
+                <div class="text-xl font-bold font-mono text-brand-400">+8.33%</div>
+              </div>
+              <div class="text-2xl text-surface-500">=</div>
+              <div>
+                <div class="text-xs text-surface-400 mb-1">Predicted Price</div>
+                <div class="text-3xl font-bold font-mono text-white gsap-final-price">$1,950</div>
+              </div>
+              <div class="w-px h-10 bg-surface-700 hidden md:block"></div>
+              <div>
+                <div class="text-xs text-surface-400 mb-1">Confidence</div>
+                <div class="text-xl font-bold font-mono text-emerald-400">94%</div>
+              </div>
+              <div>
+                <div class="text-xs text-surface-400 mb-1">Range</div>
+                <div class="text-xl font-bold font-mono text-surface-300">$1,852 – $2,048</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Formula Section -->
+<section id="formula" class="py-16 px-6 bg-surface-950/50">
+  <div class="max-w-7xl mx-auto">
+    <h2 class="text-2xl font-bold text-white mb-2">How a Formula Gets Applied</h2>
+    <p class="text-surface-400 mb-8">Real example: CN→GB SPOT, March 2026 formula, base price $1,800</p>
+
+    <!-- Formula Components -->
+    <div class="grid md:grid-cols-5 gap-3 mb-8">
+      <div class="glass rounded-xl p-4 text-center">
+        <div class="text-xs text-surface-400 mb-1">Trend</div>
+        <div class="text-lg font-bold text-red-400">-0.35%</div>
+        <div class="text-xs text-surface-500">per week, caps ±5%</div>
+      </div>
+      <div class="glass rounded-xl p-4 text-center">
+        <div class="text-xs text-surface-400 mb-1">Seasonal</div>
+        <div class="text-lg font-bold text-blue-400">W01–W52</div>
+        <div class="text-xs text-surface-500">mostly flat (1.0)</div>
+      </div>
+      <div class="glass rounded-xl p-4 text-center">
+        <div class="text-xs text-surface-400 mb-1">Momentum</div>
+        <div class="text-lg font-bold text-emerald-400">+7.91%</div>
+        <div class="text-xs text-surface-500">fades over 8 weeks</div>
+      </div>
+      <div class="glass rounded-xl p-4 text-center">
+        <div class="text-xs text-surface-400 mb-1">Events</div>
+        <div class="text-lg font-bold text-amber-400">3 active</div>
+        <div class="text-xs text-surface-500">exp. half-life decay</div>
+      </div>
+      <div class="glass rounded-xl p-4 text-center">
+        <div class="text-xs text-surface-400 mb-1">Signals</div>
+        <div class="text-lg font-bold text-purple-400">3 forward</div>
+        <div class="text-xs text-surface-500">impact × confidence</div>
+      </div>
+    </div>
+
+    <!-- Real Example: KR→US Contract Predicted vs Actual -->
+    <div class="glass rounded-xl p-6 mb-8">
+      <div class="flex flex-wrap items-center gap-3 mb-2">
+        <h3 class="text-sm font-medium text-white">Real Example — KR→US Contract (Best Route, 6% MAPE)</h3>
+        <span class="px-2 py-0.5 rounded text-xs bg-emerald-500/20 text-emerald-400">94% Accuracy</span>
+      </div>
+      <p class="text-xs text-surface-400 mb-4">This is real data from June–November 2025. Each row is one week where we compare what the model predicted vs what the market actually did. Base price was <span class="text-white">$2,313</span>. Green rows = error under 5%, yellow = 5–10%, red = over 10%.</p>
+
+      <!-- Chart -->
+      <div class="mb-6" style="height: 280px;">
+        <canvas id="predVsActualChart"></canvas>
+      </div>
+
+      <!-- Table -->
+      <div class="overflow-x-auto" style="max-height: 420px; overflow-y: auto;">
+        <table class="w-full text-sm">
+          <thead class="sticky top-0 bg-surface-900">
+            <tr class="border-b border-surface-700">
+              <th class="text-left py-2 px-3 text-surface-400 font-medium">Date</th>
+              <th class="text-center py-2 px-3 text-surface-400 font-medium">Week</th>
+              <th class="text-right py-2 px-3 text-surface-400 font-medium">We Predicted</th>
+              <th class="text-right py-2 px-3 text-surface-400 font-medium">Actually Was</th>
+              <th class="text-right py-2 px-3 text-surface-400 font-medium">Off By</th>
+              <th class="text-right py-2 px-3 text-surface-400 font-medium">Error %</th>
+              <th class="text-center py-2 px-3 text-surface-400 font-medium">In Range?</th>
+            </tr>
+          </thead>
+          <tbody class="text-surface-300" id="pred-actual-table"></tbody>
+        </table>
+      </div>
+
+      <div class="mt-4 flex flex-wrap gap-4 text-xs text-surface-400">
+        <div class="flex items-center gap-2"><div class="w-3 h-3 rounded bg-emerald-500/30 border border-emerald-500/50"></div> Under 5% error</div>
+        <div class="flex items-center gap-2"><div class="w-3 h-3 rounded bg-amber-500/20 border border-amber-500/40"></div> 5–10% error</div>
+        <div class="flex items-center gap-2"><div class="w-3 h-3 rounded bg-red-500/20 border border-red-500/40"></div> Over 10% error</div>
+        <div class="flex items-center gap-2"><span class="text-emerald-400">✓</span> Actual fell within our predicted range</div>
+      </div>
+    </div>
+
+    <!-- Step by step at Week 3 -->
+    <div class="glass rounded-xl p-6 mb-8">
+      <h3 class="text-sm font-medium text-white mb-4">Worked Example — Week 3 (ISO W12)</h3>
+      <div class="overflow-x-auto">
+        <table class="w-full text-sm">
+          <thead>
+            <tr class="border-b border-surface-700">
+              <th class="text-left py-2 px-3 text-surface-400 font-medium">Component</th>
+              <th class="text-left py-2 px-3 text-surface-400 font-medium">Formula</th>
+              <th class="text-left py-2 px-3 text-surface-400 font-medium">Calculation</th>
+              <th class="text-right py-2 px-3 text-surface-400 font-medium">Result</th>
+            </tr>
+          </thead>
+          <tbody class="text-surface-300">
+            <tr class="border-b border-surface-800"><td class="py-2 px-3"><span class="inline-block w-2 h-2 rounded-full bg-red-400 mr-2"></span>Trend</td><td class="py-2 px-3"><code class="text-xs">trend_weekly_pct × week</code></td><td class="py-2 px-3">-0.35% × 3</td><td class="py-2 px-3 text-right font-mono text-red-400">-1.05%</td></tr>
+            <tr class="border-b border-surface-800"><td class="py-2 px-3"><span class="inline-block w-2 h-2 rounded-full bg-blue-400 mr-2"></span>Seasonal</td><td class="py-2 px-3"><code class="text-xs">seasonal["W12"] - 1.0</code></td><td class="py-2 px-3">1.0 - 1.0</td><td class="py-2 px-3 text-right font-mono text-blue-400">0.00%</td></tr>
+            <tr class="border-b border-surface-800"><td class="py-2 px-3"><span class="inline-block w-2 h-2 rounded-full bg-emerald-400 mr-2"></span>Momentum</td><td class="py-2 px-3"><code class="text-xs">momentum × (1 - week/8)</code></td><td class="py-2 px-3">7.91% × 0.625</td><td class="py-2 px-3 text-right font-mono text-emerald-400">+4.94%</td></tr>
+            <tr class="border-b border-surface-800"><td class="py-2 px-3"><span class="inline-block w-2 h-2 rounded-full bg-amber-400 mr-2"></span>Events</td><td class="py-2 px-3"><code class="text-xs">Σ impact × e^(-0.693×w/decay)</code></td><td class="py-2 px-3">2.31 + 1.06 + 0.59</td><td class="py-2 px-3 text-right font-mono text-amber-400">+3.96%</td></tr>
+            <tr class="border-b border-surface-800"><td class="py-2 px-3"><span class="inline-block w-2 h-2 rounded-full bg-purple-400 mr-2"></span>Signals</td><td class="py-2 px-3"><code class="text-xs">Σ impact × conf × e^(-decay)</code></td><td class="py-2 px-3">0.58 + (-0.52) + 0.42</td><td class="py-2 px-3 text-right font-mono text-purple-400">+0.48%</td></tr>
+            <tr class="bg-surface-800/50"><td class="py-3 px-3 font-medium text-white" colspan="2">Total Change</td><td class="py-3 px-3 text-white">-1.05 + 0 + 4.94 + 3.96 + 0.48</td><td class="py-3 px-3 text-right font-mono font-bold text-brand-400">+8.33%</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="mt-4 flex flex-wrap gap-4 text-sm">
+        <div class="glass rounded-lg px-4 py-2"><span class="text-surface-400">Base:</span> <span class="text-white font-mono">$1,800</span></div>
+        <div class="glass rounded-lg px-4 py-2"><span class="text-surface-400">Predicted:</span> <span class="text-brand-400 font-mono font-bold">$1,950</span></div>
+        <div class="glass rounded-lg px-4 py-2"><span class="text-surface-400">Confidence:</span> <span class="text-white font-mono">0.94</span></div>
+        <div class="glass rounded-lg px-4 py-2"><span class="text-surface-400">Range:</span> <span class="text-white font-mono">$1,852 – $2,048</span></div>
+      </div>
+    </div>
+
+    <!-- Active Events -->
+    <div class="grid md:grid-cols-2 gap-6">
+      <div class="glass rounded-xl p-6">
+        <h3 class="text-sm font-medium text-white mb-4">Active Events (from formula)</h3>
+        <div class="space-y-3">
+          <div class="flex items-start gap-3 p-3 rounded-lg bg-surface-800/50">
+            <div class="w-8 h-8 rounded-full bg-red-500/20 flex items-center justify-center flex-shrink-0 mt-0.5"><span class="text-xs font-bold text-red-400">3</span></div>
+            <div>
+              <div class="text-sm text-white font-medium">Strait of Hormuz tensions</div>
+              <div class="text-xs text-surface-400 mt-0.5">Closure/Lockdown · Impact: +3.0% · Decay: 8 weeks</div>
+            </div>
+          </div>
+          <div class="flex items-start gap-3 p-3 rounded-lg bg-surface-800/50">
+            <div class="w-8 h-8 rounded-full bg-amber-500/20 flex items-center justify-center flex-shrink-0 mt-0.5"><span class="text-xs font-bold text-amber-400">2</span></div>
+            <div>
+              <div class="text-sm text-white font-medium">CMA CGM emergency surcharge</div>
+              <div class="text-xs text-surface-400 mt-0.5">Surcharge · Impact: +1.5% · Decay: 6 weeks</div>
+            </div>
+          </div>
+          <div class="flex items-start gap-3 p-3 rounded-lg bg-surface-800/50">
+            <div class="w-8 h-8 rounded-full bg-amber-500/20 flex items-center justify-center flex-shrink-0 mt-0.5"><span class="text-xs font-bold text-amber-400">2</span></div>
+            <div>
+              <div class="text-sm text-white font-medium">Winter storms — N. Europe ports</div>
+              <div class="text-xs text-surface-400 mt-0.5">Inclement Weather · Impact: +1.0% · Decay: 4 weeks</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="glass rounded-xl p-6">
+        <h3 class="text-sm font-medium text-white mb-4">Forward Signals (from formula)</h3>
+        <div class="space-y-3">
+          <div class="flex items-start gap-3 p-3 rounded-lg bg-surface-800/50">
+            <div class="w-8 h-8 rounded-full bg-blue-500/20 flex items-center justify-center flex-shrink-0 mt-0.5"><span class="text-xs font-bold text-blue-400">↑</span></div>
+            <div>
+              <div class="text-sm text-white font-medium">Ocean Alliance capacity cuts</div>
+              <div class="text-xs text-surface-400 mt-0.5">Capacity Adjustment · +1.0% · Conf: 70% · 12 weeks</div>
+            </div>
+          </div>
+          <div class="flex items-start gap-3 p-3 rounded-lg bg-surface-800/50">
+            <div class="w-8 h-8 rounded-full bg-emerald-500/20 flex items-center justify-center flex-shrink-0 mt-0.5"><span class="text-xs font-bold text-emerald-400">↓</span></div>
+            <div>
+              <div class="text-sm text-white font-medium">French import rules for UK DDP</div>
+              <div class="text-xs text-surface-400 mt-0.5">Regulatory Change · -0.8% · Conf: 80% · 10 weeks</div>
+            </div>
+          </div>
+          <div class="flex items-start gap-3 p-3 rounded-lg bg-surface-800/50">
+            <div class="w-8 h-8 rounded-full bg-blue-500/20 flex items-center justify-center flex-shrink-0 mt-0.5"><span class="text-xs font-bold text-blue-400">↑</span></div>
+            <div>
+              <div class="text-sm text-white font-medium">Pre-CNY front-loading surge</div>
+              <div class="text-xs text-surface-400 mt-0.5">Seasonal Demand · +0.8% · Conf: 75% · 6 weeks</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- API Endpoints Section -->
+<section id="api" class="py-16 px-6">
+  <div class="max-w-7xl mx-auto">
+    <h2 class="text-2xl font-bold text-white mb-2">API Endpoints</h2>
+    <p class="text-surface-400 mb-8">8 endpoints under <code class="text-brand-400">/forecast</code> — 7 public + 1 authenticated</p>
+
+    <!-- Authenticated endpoint -->
+    <div class="glass rounded-xl p-6 mb-6 border border-brand-500/30 glow">
+      <div class="flex items-center gap-3 mb-4">
+        <span class="px-2 py-0.5 rounded text-xs font-bold bg-emerald-500/20 text-emerald-400">GET</span>
+        <code class="text-brand-400 font-mono text-sm">/forecast/predict</code>
+        <span class="px-2 py-0.5 rounded text-xs bg-amber-500/20 text-amber-400">JWT Required</span>
+        <span class="px-2 py-0.5 rounded text-xs bg-surface-700 text-surface-300">10 req/min</span>
+      </div>
+      <p class="text-sm text-surface-300 mb-4">Returns enhanced formula-based price predictions per user. This is the main prediction endpoint.</p>
+      <div class="grid md:grid-cols-2 gap-4">
+        <div>
+          <div class="text-xs font-medium text-surface-400 uppercase tracking-wider mb-2">Parameters</div>
+          <div class="space-y-1 text-sm text-surface-300">
+            <div><code class="text-xs text-brand-300">mode</code> <span class="text-surface-500">— ocean | air</span></div>
+            <div><code class="text-xs text-brand-300">from_date</code> <span class="text-surface-500">— YYYY-MM-DD</span></div>
+            <div><code class="text-xs text-brand-300">to_date</code> <span class="text-surface-500">— YYYY-MM-DD</span></div>
+            <div><code class="text-xs text-brand-300">n_months</code> <span class="text-surface-500">— prediction horizon (default: 6)</span></div>
+          </div>
+        </div>
+        <div>
+          <div class="text-xs font-medium text-surface-400 uppercase tracking-wider mb-2">Response</div>
+          <div class="space-y-1 text-sm text-surface-300">
+            <div><code class="text-xs text-emerald-300">predictions_by_week[]</code> <span class="text-surface-500">— weekly predictions</span></div>
+            <div><code class="text-xs text-emerald-300">port_mapping[]</code> <span class="text-surface-500">— port → country mapping</span></div>
+            <div><code class="text-xs text-emerald-300">breakdown{}</code> <span class="text-surface-500">— trend, seasonal, events...</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Public endpoints grid -->
+    <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+      <div class="endpoint-card glass rounded-xl p-4 border border-transparent">
+        <div class="flex items-center gap-2 mb-2">
+          <span class="px-2 py-0.5 rounded text-xs font-bold bg-emerald-500/20 text-emerald-400">GET</span>
+          <span class="px-2 py-0.5 rounded text-xs bg-surface-700 text-surface-300">25/min</span>
+        </div>
+        <code class="text-sm text-surface-200 block mb-1">/forecast/max-disruption-probability</code>
+        <p class="text-xs text-surface-400">Max daily risk probability per day</p>
+      </div>
+      <div class="endpoint-card glass rounded-xl p-4 border border-transparent">
+        <div class="flex items-center gap-2 mb-2">
+          <span class="px-2 py-0.5 rounded text-xs font-bold bg-emerald-500/20 text-emerald-400">GET</span>
+          <span class="px-2 py-0.5 rounded text-xs bg-surface-700 text-surface-300">25/min</span>
+        </div>
+        <code class="text-sm text-surface-200 block mb-1">/forecast/risk-per-country</code>
+        <p class="text-xs text-surface-400">Average risk by country</p>
+      </div>
+      <div class="endpoint-card glass rounded-xl p-4 border border-transparent">
+        <div class="flex items-center gap-2 mb-2">
+          <span class="px-2 py-0.5 rounded text-xs font-bold bg-emerald-500/20 text-emerald-400">GET</span>
+          <span class="px-2 py-0.5 rounded text-xs bg-surface-700 text-surface-300">25/min</span>
+        </div>
+        <code class="text-sm text-surface-200 block mb-1">/forecast/avg-disruption</code>
+        <p class="text-xs text-surface-400">Average disruption probability over time</p>
+      </div>
+      <div class="endpoint-card glass rounded-xl p-4 border border-transparent">
+        <div class="flex items-center gap-2 mb-2">
+          <span class="px-2 py-0.5 rounded text-xs font-bold bg-emerald-500/20 text-emerald-400">GET</span>
+          <span class="px-2 py-0.5 rounded text-xs bg-surface-700 text-surface-300">25/min</span>
+        </div>
+        <code class="text-sm text-surface-200 block mb-1">/forecast/avg-price-increase</code>
+        <p class="text-xs text-surface-400">Average price-increase probability over time</p>
+      </div>
+      <div class="endpoint-card glass rounded-xl p-4 border border-transparent">
+        <div class="flex items-center gap-2 mb-2">
+          <span class="px-2 py-0.5 rounded text-xs font-bold bg-emerald-500/20 text-emerald-400">GET</span>
+          <span class="px-2 py-0.5 rounded text-xs bg-surface-700 text-surface-300">25/min</span>
+        </div>
+        <code class="text-sm text-surface-200 block mb-1">/forecast/avg-price-decrease</code>
+        <p class="text-xs text-surface-400">Average price-decrease probability over time</p>
+      </div>
+      <div class="endpoint-card glass rounded-xl p-4 border border-transparent">
+        <div class="flex items-center gap-2 mb-2">
+          <span class="px-2 py-0.5 rounded text-xs font-bold bg-emerald-500/20 text-emerald-400">GET</span>
+          <span class="px-2 py-0.5 rounded text-xs bg-surface-700 text-surface-300">25/min</span>
+        </div>
+        <code class="text-sm text-surface-200 block mb-1">/forecast/event-types</code>
+        <p class="text-xs text-surface-400">Count of events by type</p>
+      </div>
+      <div class="endpoint-card glass rounded-xl p-4 border border-transparent">
+        <div class="flex items-center gap-2 mb-2">
+          <span class="px-2 py-0.5 rounded text-xs font-bold bg-emerald-500/20 text-emerald-400">GET</span>
+          <span class="px-2 py-0.5 rounded text-xs bg-surface-700 text-surface-300">25/min</span>
+        </div>
+        <code class="text-sm text-surface-200 block mb-1">/forecast/key-events</code>
+        <p class="text-xs text-surface-400">Event details with descriptions and impact</p>
+      </div>
+    </div>
+
+    <!-- Response Example -->
+    <div class="mt-8">
+      <h3 class="text-sm font-medium text-white mb-3">Example Response — /forecast/predict</h3>
+      <div class="code-block">
+        <button class="copy-btn px-3 py-1 rounded text-xs bg-surface-700 hover:bg-surface-600 text-surface-300" onclick="copyCode(this)">Copy</button>
+        <pre><code class="language-json">{
+  "predictions_by_week": [
+    {
+      "date": "2026-03-16",
+      "week_number": 1,
+      "origin_country": "CN",
+      "destination_country": "GB",
+      "mode": "ocean",
+      "rate_type": "SPOT",
+      "market_base_price": 1800.00,
+      "market_predicted_price": 2020.00,
+      "market_range_low": 1919.00,
+      "market_range_high": 2121.00,
+      "predicted_change_pct": 12.21,
+      "confidence": 0.98,
+      "breakdown": {
+        "trend": -0.35,
+        "seasonal": 0.00,
+        "momentum": 6.92,
+        "events": 5.07,
+        "signals": 0.57,
+        "volatility_factor": 1.05
+      }
+    }
+  ],
+  "port_mapping": [
+    {
+      "origin_port": "CNSHA",
+      "destination_port": "GBFXT",
+      "origin_country": "CN",
+      "destination_country": "GB"
+    }
+  ]
+}</code></pre>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- SQL Queries Section -->
+<section id="queries" class="py-16 px-6 bg-surface-950/50">
+  <div class="max-w-7xl mx-auto">
+    <h2 class="text-2xl font-bold text-white mb-2">SQL Queries</h2>
+    <p class="text-surface-400 mb-8">All ClickHouse queries in <code class="text-brand-400">app/controllers/sql/forecasts/</code></p>
+
+    <!-- Query tabs -->
+    <div class="flex flex-wrap gap-2 mb-6">
+      <button class="tab-btn active px-3 py-1.5 rounded-lg text-xs font-medium bg-surface-700 text-surface-300" onclick="showQuery('formulas', this)">Fetch Formulas</button>
+      <button class="tab-btn px-3 py-1.5 rounded-lg text-xs font-medium bg-surface-700 text-surface-300" onclick="showQuery('routes', this)">User Routes</button>
+      <button class="tab-btn px-3 py-1.5 rounded-lg text-xs font-medium bg-surface-700 text-surface-300" onclick="showQuery('market', this)">Latest Market Prices</button>
+      <button class="tab-btn px-3 py-1.5 rounded-lg text-xs font-medium bg-surface-700 text-surface-300" onclick="showQuery('disruption', this)">Max Disruption</button>
+      <button class="tab-btn px-3 py-1.5 rounded-lg text-xs font-medium bg-surface-700 text-surface-300" onclick="showQuery('risk', this)">Risk Per Country</button>
+      <button class="tab-btn px-3 py-1.5 rounded-lg text-xs font-medium bg-surface-700 text-surface-300" onclick="showQuery('events', this)">Key Events</button>
+      <button class="tab-btn px-3 py-1.5 rounded-lg text-xs font-medium bg-surface-700 text-surface-300" onclick="showQuery('summary', this)">Prediction Summary</button>
+      <button class="tab-btn px-3 py-1.5 rounded-lg text-xs font-medium bg-surface-700 text-surface-300" onclick="showQuery('lanes_ocean', this)">Lane Discovery</button>
+      <button class="tab-btn px-3 py-1.5 rounded-lg text-xs font-medium bg-surface-700 text-surface-300" onclick="showQuery('mkt_events', this)">Market Events</button>
+    </div>
+
+    <div id="query-container"></div>
+  </div>
+</section>
+
+<!-- GPT Prompt Section -->
+<section id="prompt" class="py-16 px-6">
+  <div class="max-w-7xl mx-auto">
+    <h2 class="text-2xl font-bold text-white mb-2">GPT Prompt Template</h2>
+    <p class="text-surface-400 mb-8">What gets sent to GPT-4 for each route × rate_type combination</p>
+
+    <div class="grid md:grid-cols-3 gap-6 mb-8">
+      <div class="glass rounded-xl p-5">
+        <div class="text-xs font-medium text-purple-400 uppercase tracking-wider mb-3">Model Config</div>
+        <div class="space-y-2 text-sm text-surface-300">
+          <div class="flex justify-between"><span>Model</span><code class="text-xs text-purple-300">gpt-4.1-mini-2025-04-14</code></div>
+          <div class="flex justify-between"><span>Temperature</span><span class="text-purple-300">0.3</span></div>
+          <div class="flex justify-between"><span>Output</span><span class="text-purple-300">JSON</span></div>
+        </div>
+      </div>
+      <div class="glass rounded-xl p-5 md:col-span-2">
+        <div class="text-xs font-medium text-purple-400 uppercase tracking-wider mb-3">Constraints Enforced</div>
+        <div class="space-y-2 text-sm text-surface-300">
+          <div class="flex items-start gap-2"><span class="text-purple-400 mt-0.5">→</span> <code>trend_weekly_pct</code> must not exceed 2x max observed weekly volatility (capped at 3%)</div>
+          <div class="flex items-start gap-2"><span class="text-purple-400 mt-0.5">→</span> Seasonal factors must be proportional to observed volatility</div>
+          <div class="flex items-start gap-2"><span class="text-purple-400 mt-0.5">→</span> Event impacts must be justified by actual price movements near event dates</div>
+          <div class="flex items-start gap-2"><span class="text-purple-400 mt-0.5">→</span> Total combined impact at week 1 must not exceed a calculated budget</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="glass rounded-xl p-6">
+      <h3 class="text-sm font-medium text-white mb-4">Prompt Structure (simplified)</h3>
+      <div class="code-block">
+        <button class="copy-btn px-3 py-1 rounded text-xs bg-surface-700 hover:bg-surface-600 text-surface-300" onclick="copyCode(this)">Copy</button>
+        <pre><code class="language-json">// System: You are a freight pricing expert...
+
+// User message includes:
+{
+  "route": {
+    "origin_country": "CN",
+    "destination_country": "GB",
+    "mode": "Ocean",
+    "rate_type": "SPOT"
+  },
+
+  "price_history": [
+    // 4 records/month × 10 months = ~40 sampled weeks
+    { "date": "2025-05-05", "min_price": 1580, "max_price": 1720,
+      "volatility": 0.45, "p25": 1610, "p50": 1650, "p75": 1700 },
+    // ...
+  ],
+
+  "price_bounds": {
+    "lowest_week": { "date": "2025-07-14", "price": 1420 },
+    "highest_week": { "date": "2025-12-01", "price": 2180 }
+  },
+
+  "weekly_volatility": [0.3, -0.8, 1.2, -0.5, 0.7, ...],
+
+  "market_events": [
+    { "title": "Strait of Hormuz tensions",
+      "event_type": "Closure/Lockdown",
+      "risk": 3, "forecast": 1,
+      "start_date": "2026-01-15", "end_date": "2026-03-01" },
+    // up to 500 events sorted by risk
+  ],
+
+  "price_direction": {
+    "price_up_prob": 0.45,
+    "price_down_prob": 0.55
+  },
+
+  "deterministic_baseline": {
+    "current_price": 1732.57,
+    "current_price_date": "2026-02-24",
+    "recent_momentum_4w": 7.91,
+    "max_weekly_change_pct": 1.23
+  }
+}
+
+// Expected output format:
+{
+  "trend_weekly_pct": -0.35,
+  "seasonal_factors": { "W01": 1.01, "W02": 1.01, ... "W52": 0.98 },
+  "active_events": [
+    { "event_type": "...", "title": "...", "risk": 3,
+      "computed_impact_pct": 3.0, "decay_remaining_weeks": 8 }
+  ],
+  "forward_signals": [
+    { "signal_type": "...", "title": "...", "impact_pct": 1.0,
+      "confidence": 0.7, "time_horizon_weeks": 12 }
+  ],
+  "reasoning": "The route shows moderate volatility..."
+}</code></pre>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Accuracy Section -->
+<section id="accuracy" class="py-16 px-6 bg-surface-950/50">
+  <div class="max-w-7xl mx-auto">
+    <h2 class="text-2xl font-bold text-white mb-2">Accuracy Results</h2>
+    <p class="text-surface-400 mb-8">Tested on 216 data points, June–November 2025, 9 route/rate-type combinations</p>
+
+    <div class="grid md:grid-cols-2 gap-6 mb-8">
+      <div class="glass rounded-xl p-6">
+        <h3 class="text-sm font-medium text-white mb-1">MAPE by Route</h3>
+        <p class="text-xs text-surface-400 mb-4"><strong class="text-surface-300">MAPE</strong> = Mean Absolute Percentage Error — the average % difference between what we predicted and what the market actually did. Lower is better. Each bar is one route + rate type combo. <span class="text-emerald-400">Green</span> = under 15% (great), <span class="text-brand-400">Blue</span> = 15–25% (decent), <span class="text-amber-400">Yellow</span> = 25–35% (needs work), <span class="text-red-400">Red</span> = over 35% (poor). "ctr" = Contract rates, "spot" = Spot market rates.</p>
+        <div style="height: 300px;"><canvas id="routeChart"></canvas></div>
+      </div>
+      <div class="glass rounded-xl p-6">
+        <h3 class="text-sm font-medium text-white mb-1">Improvement Journey (V1 → V3)</h3>
+        <p class="text-xs text-surface-400 mb-4">How the model improved from its first version (V1, gray) to the current version (V3, blue). <strong class="text-surface-300">MAPE</strong>: average prediction error — lower is better (went from 36% down to 24%). <strong class="text-surface-300">Direction Acc.</strong>: how often we correctly predicted whether prices would go up or down — higher is better. <strong class="text-surface-300">Range Coverage</strong>: how often the actual price fell inside our predicted confidence range — higher is better (doubled from 28% to 57%).</p>
+        <div style="height: 300px;"><canvas id="improvementChart"></canvas></div>
+      </div>
+    </div>
+
+    <!-- Per-route table -->
+    <div class="glass rounded-xl p-6 mb-8">
+      <h3 class="text-sm font-medium text-white mb-4">Per-Route Breakdown</h3>
+      <div class="overflow-x-auto">
+        <table class="w-full text-sm">
+          <thead>
+            <tr class="border-b border-surface-700">
+              <th class="text-left py-2 px-3 text-surface-400 font-medium">Route</th>
+              <th class="text-right py-2 px-3 text-surface-400 font-medium">MAPE</th>
+              <th class="text-right py-2 px-3 text-surface-400 font-medium">Bias</th>
+              <th class="text-right py-2 px-3 text-surface-400 font-medium">Direction</th>
+              <th class="text-right py-2 px-3 text-surface-400 font-medium">Range</th>
+              <th class="text-right py-2 px-3 text-surface-400 font-medium">Base Price</th>
+            </tr>
+          </thead>
+          <tbody class="text-surface-300" id="route-table-body"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- KR→US Summary Table: date | actual mean | predicted mean | diff % | accuracy % -->
+    <div class="glass rounded-xl p-6 mb-8">
+      <div class="flex flex-wrap items-center gap-3 mb-2">
+        <h3 class="text-sm font-medium text-white">Weekly Accuracy — KR→US Contract (Best Lane)</h3>
+        <span class="px-2 py-0.5 rounded text-xs bg-emerald-500/20 text-emerald-400">94% Avg Accuracy</span>
+        <span class="px-2 py-0.5 rounded text-xs bg-brand-500/20 text-brand-400">6% MAPE</span>
+      </div>
+      <p class="text-xs text-surface-400 mb-4">Weekly breakdown showing predicted vs actual mean prices for our best-performing route. Accuracy = 100% minus the absolute error percentage.</p>
+      <div class="overflow-x-auto" style="max-height: 480px; overflow-y: auto;">
+        <table class="w-full text-sm">
+          <thead class="sticky top-0 bg-surface-900 z-10">
+            <tr class="border-b border-surface-700">
+              <th class="text-left py-2 px-3 text-surface-400 font-medium">Date</th>
+              <th class="text-right py-2 px-3 text-surface-400 font-medium">Actual Mean</th>
+              <th class="text-right py-2 px-3 text-surface-400 font-medium">Predicted Mean</th>
+              <th class="text-right py-2 px-3 text-surface-400 font-medium">Diff %</th>
+              <th class="text-right py-2 px-3 text-surface-400 font-medium">Accuracy %</th>
+            </tr>
+          </thead>
+          <tbody class="text-surface-300" id="accuracy-summary-table"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Horizon -->
+    <div class="glass rounded-xl p-6">
+      <h3 class="text-sm font-medium text-white mb-4">Accuracy by Forecast Horizon</h3>
+      <div class="grid grid-cols-4 gap-4">
+        <div class="text-center p-4 rounded-lg bg-surface-800/50">
+          <div class="text-xs text-surface-400 mb-1">Week 1–4</div>
+          <div class="text-xl font-bold text-white">26.1%</div>
+          <div class="text-xs text-emerald-400 mt-1">92% direction</div>
+        </div>
+        <div class="text-center p-4 rounded-lg bg-surface-800/50">
+          <div class="text-xs text-surface-400 mb-1">Week 5–8</div>
+          <div class="text-xl font-bold text-white">21.5%</div>
+          <div class="text-xs text-emerald-400 mt-1">92% direction</div>
+        </div>
+        <div class="text-center p-4 rounded-lg bg-surface-800/50">
+          <div class="text-xs text-surface-400 mb-1">Week 9–12</div>
+          <div class="text-xl font-bold text-white">23.5%</div>
+          <div class="text-xs text-emerald-400 mt-1">89% direction</div>
+        </div>
+        <div class="text-center p-4 rounded-lg bg-surface-800/50">
+          <div class="text-xs text-surface-400 mb-1">Week 13+</div>
+          <div class="text-xl font-bold text-white">24.6%</div>
+          <div class="text-xs text-amber-400 mt-1">60% direction</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ClickHouse Tables Section -->
+<section class="py-16 px-6">
+  <div class="max-w-7xl mx-auto">
+    <h2 class="text-2xl font-bold text-white mb-2">ClickHouse Schema</h2>
+    <p class="text-surface-400 mb-8">Three tables in the <code class="text-brand-400">forecasts</code> database</p>
+    <div class="grid md:grid-cols-3 gap-4">
+      <div class="glass rounded-xl p-5">
+        <div class="flex items-center gap-2 mb-3">
+          <div class="w-2 h-2 rounded-full bg-brand-400"></div>
+          <span class="text-sm font-medium text-white">prediction_formula</span>
+        </div>
+        <p class="text-xs text-surface-400 mb-3">Main formula storage. One row per route × rate_type × month.</p>
+        <div class="space-y-1 text-xs font-mono text-surface-400">
+          <div><span class="text-amber-300">formula_date</span> Date</div>
+          <div><span class="text-amber-300">origin_country</span> String</div>
+          <div><span class="text-amber-300">destination_country</span> String</div>
+          <div><span class="text-amber-300">mode</span> Enum8</div>
+          <div><span class="text-amber-300">rate_type</span> String</div>
+          <div><span class="text-amber-300">formula_json</span> String</div>
+          <div><span class="text-amber-300">is_valid</span> UInt8</div>
+        </div>
+        <div class="mt-3 text-xs text-surface-500">Engine: SharedReplacingMergeTree</div>
+      </div>
+      <div class="glass rounded-xl p-5">
+        <div class="flex items-center gap-2 mb-3">
+          <div class="w-2 h-2 rounded-full bg-emerald-400"></div>
+          <span class="text-sm font-medium text-white">prediction_accuracy</span>
+        </div>
+        <p class="text-xs text-surface-400 mb-3">Backtesting results. Predicted vs actual per week.</p>
+        <div class="space-y-1 text-xs font-mono text-surface-400">
+          <div><span class="text-amber-300">evaluation_date</span> Date</div>
+          <div><span class="text-amber-300">formula_date</span> Date</div>
+          <div><span class="text-amber-300">prediction_week</span> UInt8</div>
+          <div><span class="text-amber-300">predicted_price</span> Float32</div>
+          <div><span class="text-amber-300">actual_price</span> Float32</div>
+          <div><span class="text-amber-300">error_pct</span> Float32</div>
+          <div><span class="text-amber-300">direction_correct</span> UInt8</div>
+        </div>
+        <div class="mt-3 text-xs text-surface-500">Engine: SharedMergeTree</div>
+      </div>
+      <div class="glass rounded-xl p-5">
+        <div class="flex items-center gap-2 mb-3">
+          <div class="w-2 h-2 rounded-full bg-purple-400"></div>
+          <span class="text-sm font-medium text-white">formula_generation_log</span>
+        </div>
+        <p class="text-xs text-surface-400 mb-3">DAG run telemetry. One row per monthly run.</p>
+        <div class="space-y-1 text-xs font-mono text-surface-400">
+          <div><span class="text-amber-300">run_date</span> Date</div>
+          <div><span class="text-amber-300">total_pairs</span> UInt32</div>
+          <div><span class="text-amber-300">successful_pairs</span> UInt32</div>
+          <div><span class="text-amber-300">avg_mape</span> Float32</div>
+          <div><span class="text-amber-300">total_openai_tokens</span> UInt32</div>
+          <div><span class="text-amber-300">total_duration_sec</span> Float32</div>
+          <div><span class="text-amber-300">error_details_json</span> String</div>
+        </div>
+        <div class="mt-3 text-xs text-surface-500">Engine: SharedMergeTree</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Footer -->
+<footer class="py-8 px-6 border-t border-surface-800">
+  <div class="max-w-7xl mx-auto flex items-center justify-between text-xs text-surface-500">
+    <span>Prediction Engine v3 — Data & Terminal Team</span>
+    <span>Last updated: March 2026</span>
+  </div>
+</footer>
+
+<script>
+// ============================================================
+// SQL Queries Data
+// ============================================================
+const queries = {
+  formulas: {
+    title: 'all_formulas_by_mode.sql',
+    desc: 'Fetches the latest valid formula for each route × rate_type. Uses FINAL to deduplicate ReplacingMergeTree.',
+    sql: `SELECT
+    formula_date,
+    origin_country,
+    destination_country,
+    mode,
+    rate_type,
+    formula_json,
+    backtest_mape_4w,
+    backtest_mape_8w,
+    backtest_mape_12w,
+    backtest_directional_accuracy,
+    self_adjustment_iterations,
+    is_valid
+FROM forecasts.prediction_formula FINAL
+WHERE mode IN ({modes})
+  AND is_valid = 1
+ORDER BY formula_date DESC
+LIMIT 1 BY origin_country, destination_country, mode, rate_type`
+  },
+  routes: {
+    title: 'user_route_pairs.sql',
+    desc: 'Gets distinct country pairs from the user\'s uploaded benchmark prices. Used to determine which formulas to apply.',
+    sql: `SELECT DISTINCT
+    toString(origin_country) AS origin_country,
+    toString(destination_country) AS destination_country
+FROM benchmark_{mode}_user_prices
+WHERE owner_corporate_id = '{owner_corporate_id}'
+  AND date BETWEEN '{start_date}' AND '{end_date}'
+  AND (expiry_date IS NULL OR expiry_date > today())
+  AND origin_country IS NOT NULL
+  AND origin_country != ''
+  AND destination_country IS NOT NULL
+  AND destination_country != ''`
+  },
+  market: {
+    title: 'latest_market_prices.sql',
+    desc: 'Direct query to the master price summary table for fresh market prices. Bypasses the benchmark pipeline. Used when user data is stale or missing.',
+    sql: `SELECT
+    upper(substring(origin, 1, 2)) AS origin_country,
+    upper(substring(destination, 1, 2)) AS destination_country,
+    lower(CAST(rate_type AS String)) AS rate_type,
+    max(date) AS price_date,
+    round(avg(percentile_50_price), 2) AS market_median_price,
+    round(avg(average_price), 2) AS market_avg_price
+FROM {market_stats_table}
+WHERE date = (
+    SELECT max(date)
+    FROM {market_stats_table}
+    WHERE date >= '{lookback_date}'
+      AND percentile_50_price > 0
+)
+AND percentile_50_price > 0
+GROUP BY origin_country, destination_country, rate_type
+HAVING origin_country IN ({origin_countries})
+   AND destination_country IN ({destination_countries})
+ORDER BY origin_country, destination_country, rate_type`
+  },
+  disruption: {
+    title: 'max_disruption_probability.sql',
+    desc: 'Returns the maximum daily risk probability. Powers the disruption heatmap on the frontend.',
+    sql: `SELECT
+    toStartOfDay(toDateTime(date)) AS day,
+    max(risk_prob) AS max_disruption_probability
+FROM forecasts.summary
+WHERE date >= toDate('{from_date}')
+  AND date < toDate('{to_date}')
+  AND country IN ({countries})
+  AND mode IN ({modes})
+GROUP BY day
+ORDER BY day ASC
+LIMIT 50000`
+  },
+  risk: {
+    title: 'risk_per_country.sql',
+    desc: 'Average risk probability by country. Powers the risk-per-country endpoint.',
+    sql: `SELECT
+    country,
+    AVG(risk_prob) / 100 AS avg_risk_probability
+FROM forecasts.summary
+WHERE country IN ({countries})
+  AND mode IN ({modes})
+  AND date >= toDate('{from_date}')
+  AND date < toDate('{to_date}')
+GROUP BY country
+ORDER BY avg_risk_probability DESC
+LIMIT 10000`
+  },
+  events: {
+    title: 'key_events.sql',
+    desc: 'Event details with truncated descriptions. Powers the events feed table.',
+    sql: `SELECT
+    event_title AS title,
+    IF(
+        lengthUTF8(event_description) > 150,
+        concat(substringUTF8(event_description, 1, 147), '...'),
+        event_description
+    ) AS description,
+    event_source AS source_name,
+    event_url AS source_url,
+    risk,
+    price_impact
+FROM forecasts.events
+WHERE country IN ({countries})
+  AND mode IN ({modes})
+  AND date >= toDate('{from_date}')
+  AND date < toDate('{to_date}')
+ORDER BY date DESC
+LIMIT 1000`
+  },
+  summary: {
+    title: 'prediction_summary.sql',
+    desc: 'Daily summary with risk, price up/down probabilities, and event counts.',
+    sql: `SELECT
+    toStartOfDay(toDateTime(date)) AS day,
+    country,
+    mode,
+    risk_prob,
+    price_up_prob,
+    price_down_prob,
+    num_of_events
+FROM forecasts.summary
+WHERE date >= toDate('{from_date}')
+  AND date < toDate('{to_date}')
+  AND country IN ({countries})
+  AND mode IN ({modes})
+ORDER BY day ASC
+LIMIT 50000`
+  },
+  lanes_ocean: {
+    title: 'Lane Discovery (MySQL)',
+    desc: 'Discovers origin-destination port pairs for formula generation. Runs against MySQL, not ClickHouse.',
+    sql: `-- Ocean lanes
+SELECT
+    u1.unlocode AS origin,
+    u2.unlocode AS destination,
+    oec.rate_count
+FROM ocean_exact_coverage oec
+JOIN unlocodes u1 ON oec.origin_id = u1.id
+JOIN unlocodes u2 ON oec.destination_id = u2.id
+WHERE load_tag = 49
+  AND (u1.country_code, u2.country_code) IN (
+      ('CN','FR'), ('CN','DE'), ('CN','GB'),
+      ('CN','US'), ('KR','CA'), ('KR','US'), ('SG','DE')
+  )
+ORDER BY rate_count DESC`
+  },
+  mkt_events: {
+    title: 'Market Events (MySQL)',
+    desc: 'Fetches market events for GPT context. Up to 500 events sorted by risk.',
+    sql: `SELECT
+    id, event_type, title, description,
+    risk, forecast,
+    start_date, end_date
+FROM market_key_events
+WHERE mode IN ('Ocean', 'All modes')
+  AND start_date >= '{from_date}'
+  AND start_date <= '{to_date}'
+  AND event_type <> 'Holiday'
+ORDER BY risk DESC, start_date DESC
+LIMIT 500`
+  }
+};
+
+function showQuery(key, el) {
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  if (el) { el.classList.add('active'); }
+  else { document.querySelector(`.tab-btn[onclick*="'${key}'"]`)?.classList.add('active'); }
+
+  const q = queries[key];
+  const container = document.getElementById('query-container');
+  container.innerHTML = `
+    <div class="glass rounded-xl p-6">
+      <div class="flex items-center justify-between mb-2">
+        <code class="text-brand-400 font-mono text-sm">${q.title}</code>
+      </div>
+      <p class="text-sm text-surface-400 mb-4">${q.desc}</p>
+      <div class="code-block">
+        <button class="copy-btn px-3 py-1 rounded text-xs bg-surface-700 hover:bg-surface-600 text-surface-300" onclick="copyCode(this)">Copy</button>
+        <pre><code class="language-sql">${escapeHtml(q.sql)}</code></pre>
+      </div>
+    </div>
+  `;
+  Prism.highlightAll();
+}
+
+// ============================================================
+// Pipeline Detail Data
+// ============================================================
+const pipelineDetails = {
+  dag: { title: 'Airflow DAG — prediction_engine', content: `<div class="grid md:grid-cols-2 gap-4"><div><p class="text-sm text-surface-300 mb-3">Runs monthly on the 1st at 02:00 UTC. Orchestrates the full pipeline: lane discovery, data extraction, GPT synthesis, and ClickHouse writes.</p><div class="text-sm text-surface-400 space-y-1"><div>Schedule: <code class="text-amber-300">0 2 1 * *</code></div><div>Retries: 2 (5-min delay)</div><div>Max active runs: 1</div><div>Timeout: 8 hours</div></div></div><div><p class="text-xs text-surface-500 font-mono">airflow_dags/prediction_engine_dag.py</p></div></div>` },
+  extract: { title: 'Extract Historical Prices', content: `<p class="text-sm text-surface-300 mb-3">Calls the backend <code class="text-brand-300">/rate_stats/v3</code> API to fetch 10 months of price history per route. Computes deterministic baseline: current_price, current_price_date, recent_momentum_4w, max_weekly_change_pct. Samples 4 records per month for GPT input.</p><p class="text-xs text-surface-500 font-mono">airflow_dags/prediction_engine/extract_historical_prices.py</p>` },
+  gpt: { title: 'GPT-4 Formula Synthesis', content: `<p class="text-sm text-surface-300 mb-3">Sends route context, sampled prices, market events, and price direction to GPT-4.1-mini (temp 0.3). Uses 25 concurrent ThreadPoolExecutor workers. Validates output: clamps trend, checks seasonal proportionality, enforces event justification, and caps week-1 total impact.</p><p class="text-xs text-surface-500 font-mono">airflow_dags/prediction_engine/formula_synthesizer.py</p>` },
+  store: { title: 'Store in ClickHouse', content: `<p class="text-sm text-surface-300 mb-3">Batch inserts validated formulas into <code class="text-amber-300">forecasts.prediction_formula</code> (SharedReplacingMergeTree). Also logs run metrics to <code class="text-amber-300">forecasts.formula_generation_log</code>: total pairs, success/fail counts, avg MAPE, token usage, duration.</p>` },
+  serve: { title: 'Serve Predictions (FastAPI)', content: `<p class="text-sm text-surface-300 mb-3">At request time, reads the latest formula from ClickHouse, fetches fresh base prices (port-to-port → country median, with staleness detection and sanity checks), then applies the formula week-by-week computing trend + seasonal + momentum + events + signals = predicted price with confidence range.</p><p class="text-xs text-surface-500 font-mono">app/controllers/forecasts_controller.py (~1400 lines)</p>` }
+};
+
+function showPipelineDetail(key) {
+  const d = pipelineDetails[key];
+  const panel = document.getElementById('pipeline-detail');
+  const content = document.getElementById('pipeline-detail-content');
+  panel.classList.remove('hidden');
+  content.innerHTML = `<h3 class="text-sm font-medium text-white mb-3">${d.title}</h3>${d.content}`;
+}
+
+// ============================================================
+// Copy to clipboard
+// ============================================================
+function copyCode(btn) {
+  const code = btn.parentElement.querySelector('code').textContent;
+  navigator.clipboard.writeText(code).then(() => {
+    btn.textContent = 'Copied!';
+    btn.classList.add('bg-emerald-600');
+    setTimeout(() => { btn.textContent = 'Copy'; btn.classList.remove('bg-emerald-600'); }, 2000);
+  });
+}
+
+function escapeHtml(str) {
+  return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+// ============================================================
+// Charts
+// ============================================================
+window.addEventListener('load', () => {
+  // Show default query
+  showQuery('formulas');
+
+  // ============================================================
+  // Real KR→US Contract data: Predicted vs Actual (Jun-Nov 2025)
+  // ============================================================
+  const krUsData = [
+    { date:'Jun 2', wk:1, pred:2473, actual:2613, lo:2364, hi:2582, err:5.3, inRange:false },
+    { date:'Jun 9', wk:2, pred:2457, actual:2615, lo:2302, hi:2612, err:6.0, inRange:false },
+    { date:'Jun 16', wk:3, pred:2441, actual:2616, lo:2241, hi:2641, err:6.7, inRange:true },
+    { date:'Jun 23', wk:4, pred:2425, actual:2614, lo:2180, hi:2670, err:7.2, inRange:true },
+    { date:'Jun 30', wk:5, pred:2409, actual:2616, lo:2120, hi:2699, err:7.9, inRange:true },
+    { date:'Jul 7', wk:6, pred:2394, actual:2473, lo:2061, hi:2727, err:3.2, inRange:true },
+    { date:'Jul 14', wk:7, pred:2379, actual:2447, lo:2003, hi:2755, err:2.8, inRange:true },
+    { date:'Jul 21', wk:8, pred:2365, actual:2445, lo:1946, hi:2783, err:3.3, inRange:true },
+    { date:'Jul 28', wk:9, pred:2361, actual:2446, lo:1899, hi:2824, err:3.5, inRange:true },
+    { date:'Aug 4', wk:10, pred:2358, actual:2445, lo:1851, hi:2865, err:3.5, inRange:true },
+    { date:'Aug 11', wk:11, pred:2356, actual:2445, lo:1804, hi:2907, err:3.7, inRange:true },
+    { date:'Aug 18', wk:12, pred:2353, actual:2445, lo:1758, hi:2948, err:3.8, inRange:true },
+    { date:'Aug 25', wk:13, pred:2351, actual:2445, lo:1711, hi:2990, err:3.9, inRange:true },
+    { date:'Sep 1', wk:14, pred:2348, actual:2445, lo:1665, hi:3032, err:3.9, inRange:true },
+    { date:'Sep 8', wk:15, pred:2346, actual:2445, lo:1619, hi:3074, err:4.0, inRange:true },
+    { date:'Sep 15', wk:16, pred:2344, actual:2445, lo:1573, hi:3115, err:4.1, inRange:true },
+    { date:'Sep 22', wk:17, pred:2342, actual:2445, lo:1527, hi:3157, err:4.2, inRange:true },
+    { date:'Sep 29', wk:18, pred:2341, actual:2443, lo:1504, hi:3177, err:4.2, inRange:true },
+    { date:'Oct 13', wk:20, pred:2337, actual:2441, lo:1502, hi:3173, err:4.2, inRange:true },
+    { date:'Oct 20', wk:21, pred:2336, actual:2441, lo:1501, hi:3171, err:4.3, inRange:true },
+    { date:'Oct 27', wk:22, pred:2335, actual:2440, lo:1500, hi:3169, err:4.3, inRange:true },
+    { date:'Nov 3', wk:23, pred:2333, actual:1888, lo:1499, hi:3168, err:23.6, inRange:true },
+    { date:'Nov 10', wk:24, pred:2332, actual:1953, lo:1498, hi:3166, err:19.4, inRange:true },
+    { date:'Nov 17', wk:25, pred:2331, actual:1777, lo:1498, hi:3164, err:31.2, inRange:true },
+  ];
+
+  // Populate accuracy summary table (date | actual mean | predicted mean | diff % | accuracy %)
+  const summaryTbody = document.getElementById('accuracy-summary-table');
+  if (summaryTbody) {
+    summaryTbody.innerHTML = krUsData.map(d => {
+      const diffPct = ((d.pred - d.actual) / d.actual * 100).toFixed(1);
+      const accuracy = (100 - d.err).toFixed(1);
+      const diffSign = parseFloat(diffPct) >= 0 ? '+' : '';
+      const accColor = accuracy >= 95 ? 'text-emerald-400' : accuracy >= 90 ? 'text-emerald-400' : accuracy >= 80 ? 'text-amber-400' : 'text-red-400';
+      const rowBg = accuracy >= 95 ? 'bg-emerald-500/10' : accuracy >= 90 ? 'bg-emerald-500/5' : accuracy >= 80 ? 'bg-amber-500/10' : 'bg-red-500/10';
+      return `<tr class="border-b border-surface-800 ${rowBg}">
+        <td class="py-1.5 px-3 text-surface-300">${d.date} 2025</td>
+        <td class="py-1.5 px-3 text-right font-mono text-emerald-400">$${d.actual.toLocaleString()}</td>
+        <td class="py-1.5 px-3 text-right font-mono text-brand-400">$${d.pred.toLocaleString()}</td>
+        <td class="py-1.5 px-3 text-right font-mono text-surface-400">${diffSign}${diffPct}%</td>
+        <td class="py-1.5 px-3 text-right font-mono font-medium ${accColor}">${accuracy}%</td>
+      </tr>`;
+    }).join('');
+    // Add summary row
+    const avgErr = krUsData.reduce((s,d) => s + d.err, 0) / krUsData.length;
+    const avgAcc = (100 - avgErr).toFixed(1);
+    summaryTbody.innerHTML += `<tr class="bg-surface-800/60 font-medium">
+      <td class="py-2 px-3 text-white" colspan="1">Average (${krUsData.length} weeks)</td>
+      <td class="py-2 px-3 text-right font-mono text-emerald-400">$${Math.round(krUsData.reduce((s,d) => s + d.actual, 0) / krUsData.length).toLocaleString()}</td>
+      <td class="py-2 px-3 text-right font-mono text-brand-400">$${Math.round(krUsData.reduce((s,d) => s + d.pred, 0) / krUsData.length).toLocaleString()}</td>
+      <td class="py-2 px-3 text-right font-mono text-surface-400">${avgErr.toFixed(1)}%</td>
+      <td class="py-2 px-3 text-right font-mono font-medium text-emerald-400">${avgAcc}%</td>
+    </tr>`;
+  }
+
+  // Predicted vs Actual chart
+  try { new Chart(document.getElementById('predVsActualChart'), {
+    type: 'line',
+    data: {
+      labels: krUsData.map(d => d.date),
+      datasets: [
+        { label: 'We Predicted', data: krUsData.map(d => d.pred), borderColor: '#2b8fff', backgroundColor: 'rgba(43,143,255,0.1)', fill: false, tension: 0.3, pointRadius: 3, pointBackgroundColor: '#2b8fff' },
+        { label: 'Actually Was', data: krUsData.map(d => d.actual), borderColor: '#34d399', backgroundColor: 'rgba(52,211,153,0.1)', fill: false, tension: 0.3, pointRadius: 3, pointBackgroundColor: '#34d399' },
+        { label: 'Range High', data: krUsData.map(d => d.hi), borderColor: 'rgba(148,163,184,0.3)', borderDash: [4,4], pointRadius: 0, fill: false },
+        { label: 'Range Low', data: krUsData.map(d => d.lo), borderColor: 'rgba(148,163,184,0.3)', borderDash: [4,4], pointRadius: 0, fill: '-1', backgroundColor: 'rgba(148,163,184,0.05)' },
+      ]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: { legend: { labels: { color: '#94a3b8', font: { size: 11 } } } },
+      scales: {
+        x: { ticks: { color: '#64748b', font: { size: 10 }, maxRotation: 45 }, grid: { color: 'rgba(71,85,105,0.3)' } },
+        y: { ticks: { color: '#64748b', font: { size: 10 }, callback: v => '$'+v.toLocaleString() }, grid: { color: 'rgba(71,85,105,0.3)' } }
+      }
+    }
+  }); } catch(e) { console.warn('predVsActualChart error:', e); }
+
+  // Populate prediction vs actual table
+  document.getElementById('pred-actual-table').innerHTML = krUsData.map(d => {
+    const bg = d.err < 5 ? 'bg-emerald-500/10' : d.err < 10 ? 'bg-amber-500/10' : 'bg-red-500/10';
+    const errColor = d.err < 5 ? 'text-emerald-400' : d.err < 10 ? 'text-amber-400' : 'text-red-400';
+    const diffSign = d.pred - d.actual > 0 ? '+' : '';
+    const diff = d.pred - d.actual;
+    return `<tr class="border-b border-surface-800 ${bg}">
+      <td class="py-1.5 px-3 text-surface-300">${d.date}</td>
+      <td class="py-1.5 px-3 text-center text-surface-400">${d.wk}</td>
+      <td class="py-1.5 px-3 text-right font-mono text-brand-400">$${d.pred.toLocaleString()}</td>
+      <td class="py-1.5 px-3 text-right font-mono text-emerald-400">$${d.actual.toLocaleString()}</td>
+      <td class="py-1.5 px-3 text-right font-mono text-surface-400">${diffSign}$${diff}</td>
+      <td class="py-1.5 px-3 text-right font-mono font-medium ${errColor}">${d.err}%</td>
+      <td class="py-1.5 px-3 text-center">${d.inRange ? '<span class="text-emerald-400">✓</span>' : '<span class="text-red-400">✗</span>'}</td>
+    </tr>`;
+  }).join('');
+
+  // Route MAPE chart
+  const routes = [
+    { name: 'KR→US Contract', mape: 6.0 },
+    { name: 'CN→FR Contract', mape: 7.6 },
+    { name: 'CN→GB Contract', mape: 14.4 },
+    { name: 'CN→DE Spot', mape: 20.1 },
+    { name: 'CN→FR Spot', mape: 22.0 },
+    { name: 'CN→GB Spot', mape: 23.8 },
+    { name: 'KR→US Spot', mape: 34.2 },
+    { name: 'CN→DE Contract', mape: 41.8 },
+    { name: 'KR→CA Spot', mape: 47.5 }
+  ];
+
+  try { new Chart(document.getElementById('routeChart'), {
+    type: 'bar',
+    data: {
+      labels: routes.map(r => r.name),
+      datasets: [{
+        label: 'MAPE %',
+        data: routes.map(r => r.mape),
+        backgroundColor: routes.map(r => r.mape < 15 ? '#34d399' : r.mape < 25 ? '#2b8fff' : r.mape < 35 ? '#fbbf24' : '#f87171'),
+        borderRadius: 4
+      }]
+    },
+    options: {
+      indexAxis: 'y',
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        tooltip: { callbacks: { label: ctx => `${ctx.raw}% average error` } }
+      },
+      scales: {
+        x: { ticks: { color: '#64748b', font: { size: 10 }, callback: v => v+'%' }, grid: { color: 'rgba(71,85,105,0.3)' } },
+        y: { ticks: { color: '#94a3b8', font: { size: 10 } }, grid: { display: false } }
+      }
+    }
+  }); } catch(e) { console.warn('routeChart error:', e); }
+
+  // Improvement chart
+  try { new Chart(document.getElementById('improvementChart'), {
+    type: 'bar',
+    data: {
+      labels: ['MAPE (Prediction Error)', 'Direction Accuracy', 'Range Coverage'],
+      datasets: [
+        { label: 'V1 (Baseline)', data: [35.7, 77.2, 28.3], backgroundColor: '#475569', borderRadius: 4 },
+        { label: 'V3 (Current)', data: [24.2, 75.5, 57.4], backgroundColor: '#2b8fff', borderRadius: 4 }
+      ]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: { legend: { labels: { color: '#94a3b8', font: { size: 11 } } } },
+      scales: {
+        x: { ticks: { color: '#94a3b8', font: { size: 10 } }, grid: { display: false } },
+        y: { ticks: { color: '#64748b', font: { size: 10 }, callback: v => v+'%' }, grid: { color: 'rgba(71,85,105,0.3)' }, max: 100 }
+      }
+    }
+  }); } catch(e) { console.warn('improvementChart error:', e); }
+
+  // Route table
+  const routeData = [
+    { route: 'KR→US contract', mape: 6.0, bias: '-$56', dir: '88%', range: '92%', base: '$2,313', color: 'text-emerald-400' },
+    { route: 'CN→FR contract', mape: 7.6, bias: '-$218', dir: '100%', range: '79%', base: '$2,492', color: 'text-emerald-400' },
+    { route: 'CN→GB contract', mape: 14.4, bias: '-$457', dir: '96%', range: '75%', base: '$2,551', color: 'text-emerald-400' },
+    { route: 'CN→DE spot', mape: 20.1, bias: '-$420', dir: '75%', range: '50%', base: '$2,475', color: 'text-brand-400' },
+    { route: 'CN→FR spot', mape: 22.0, bias: '+$125', dir: '50%', range: '58%', base: '$3,029', color: 'text-brand-400' },
+    { route: 'CN→GB spot', mape: 23.8, bias: '+$343', dir: '42%', range: '79%', base: '$3,187', color: 'text-brand-400' },
+    { route: 'KR→US spot', mape: 34.2, bias: '-$1,264', dir: '96%', range: '29%', base: '$1,848', color: 'text-amber-400' },
+    { route: 'CN→DE contract', mape: 41.8, bias: '-$1,934', dir: '96%', range: '25%', base: '$2,337', color: 'text-red-400' },
+    { route: 'KR→CA spot', mape: 47.5, bias: '+$682', dir: '38%', range: '29%', base: '$3,727', color: 'text-red-400' },
+  ];
+
+  document.getElementById('route-table-body').innerHTML = routeData.map(r => `
+    <tr class="border-b border-surface-800 hover:bg-surface-800/30">
+      <td class="py-2 px-3 text-white">${r.route}</td>
+      <td class="py-2 px-3 text-right font-mono ${r.color}">${r.mape}%</td>
+      <td class="py-2 px-3 text-right font-mono">${r.bias}</td>
+      <td class="py-2 px-3 text-right font-mono">${r.dir}</td>
+      <td class="py-2 px-3 text-right font-mono">${r.range}</td>
+      <td class="py-2 px-3 text-right font-mono text-surface-400">${r.base}</td>
+    </tr>
+  `).join('');
+
+  // Active nav highlighting
+  const sections = document.querySelectorAll('section[id]');
+  const navLinks = document.querySelectorAll('.nav-link');
+  window.addEventListener('scroll', () => {
+    let current = '';
+    sections.forEach(s => { if (window.scrollY >= s.offsetTop - 100) current = s.id; });
+    navLinks.forEach(link => {
+      link.classList.remove('active');
+      if (link.getAttribute('href') === '#' + current) link.classList.add('active');
+    });
+  });
+
+  // ============================================================
+  // GSAP ScrollTrigger — Formula in Action animation
+  // ============================================================
+  // ============================================================
+  // GSAP ScrollTrigger — Formula in Action animation
+  // ============================================================
+  try {
+    gsap.registerPlugin(ScrollTrigger);
+
+    const pinTarget = document.querySelector('.gsap-pin-target');
+
+    // Pin the section for 2500px of scrolling, then release cleanly
+    const tl = gsap.timeline({
+      scrollTrigger: {
+        trigger: '#formula-animation',
+        start: 'top top',
+        end: '+=2500',
+        pin: pinTarget,
+        scrub: 0.6,
+        anticipatePin: 1,
+        pinSpacing: true   // GSAP adds exactly the right amount of space
+      }
+    });
+
+    // === Phase 1: Title ===
+    tl.to('.gsap-title', { opacity: 1, y: 0, duration: 0.4, ease: 'power2.out' });
+
+    // === Phase 2: Labels + center UI ===
+    tl.to('.gsap-data-label', { opacity: 1, duration: 0.25 }, '+=0.05');
+    tl.to('.gsap-formula-label', { opacity: 1, duration: 0.25 }, '<');
+    tl.to('.gsap-combine-arrow', { opacity: 1, scale: 1, duration: 0.35, ease: 'back.out(1.7)' }, '<0.05');
+    tl.to('.gsap-progress-dots', { opacity: 1, duration: 0.2 }, '<');
+
+    // === Phase 3: Data cards slide in from left ===
+    const dataCards = gsap.utils.toArray('.gsap-data-card');
+    tl.to(dataCards, { opacity: 1, x: 0, duration: 0.5, stagger: 0.12, ease: 'power2.out' }, '+=0.05');
+
+    // === Phase 4: Formula cards one by one with running totals ===
+    const formulaCards = gsap.utils.toArray('.gsap-formula-card');
+    const dots = gsap.utils.toArray('.gsap-dot');
+    const stepColors = ['#f87171', '#60a5fa', '#34d399', '#fbbf24', '#a78bfa'];
+
+    formulaCards.forEach((card, i) => {
+      // Slide card in
+      tl.to(card, { opacity: 1, x: 0, duration: 0.5, ease: 'power2.out' }, '+=0.1');
+      // Light up dot + highlight card
+      tl.to(dots[i], { backgroundColor: stepColors[i], scale: 1.5, duration: 0.2 }, '<0.15');
+      tl.to(card, { borderColor: stepColors[i], duration: 0.2 }, '<');
+      // Pulse combine icon
+      tl.to('.gsap-combine-arrow > div', { scale: 1.2, duration: 0.1, yoyo: true, repeat: 1, ease: 'power1.inOut' }, '<0.1');
+      // Reveal running total
+      tl.add(() => { card.querySelector('.gsap-running-total')?.classList.remove('hidden'); });
+      // Brief hold so each step is readable
+      tl.to({}, { duration: 0.2 });
+    });
+
+    // === Phase 5: Final result ===
+    tl.to(dots[5], { backgroundColor: '#2b8fff', scale: 1.5, duration: 0.2 }, '+=0.1');
+    tl.to('.gsap-result', { opacity: 1, y: 0, duration: 0.6, ease: 'power2.out' }, '<0.05');
+    tl.fromTo('.gsap-final-price',
+      { textShadow: '0 0 0px rgba(43,143,255,0)' },
+      { textShadow: '0 0 40px rgba(43,143,255,0.7)', duration: 0.5, yoyo: true, repeat: 1 }
+    );
+    // Hold the final state so you can read it before it scrolls away
+    tl.to({}, { duration: 0.6 });
+
+  } catch(e) { console.warn('GSAP animation error:', e); }
+
+});
+</script>
+
+</body>
+</html>
